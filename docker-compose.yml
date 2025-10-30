@@ -6,14 +6,26 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: laravel_app
-    restart: unless-stopped
-    working_dir: /var/www
-    volumes:
-      - .:/var/www
     ports:
       - "8000:8000"
+    volumes:
+      - .:/var/www/html
     depends_on:
+      - mysql
       - elasticsearch
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: elasticsearch_test_project
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
@@ -21,11 +33,10 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
     ports:
       - "9200:9200"
-    volumes:
-      - esdata:/usr/share/elasticsearch/data
+      - "9300:9300"
 
 volumes:
-  dbdata:
-  esdata:
+  mysql_data:
